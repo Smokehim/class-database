@@ -30,12 +30,18 @@ app.get('/getstudent',(req, res)=>{
 
 app.get('/getstudent_ID', (req, res)=>{
     const {studentID} = req.body
-    const sql = 'SELECT * FROM student WHERE studentID=?'
+    if(!studentID){
+       return res.status(400).json({error: "no use entered"});
+    }
+    const sql = 'SELECT * FROM student WHERE studentID = ?'
     mysql.query(sql, [studentID], (error, result)=>{
         if(error){
-            console.log("not able to get use id",error.message)
+           return res.status(500).json({error:"not able to connect to database", error})
         }
-        console.log("here is you student infor", result)
+        if(result.affectedRows==0){
+           return res.status(404).json({message:"not able to select user"})
+        }
+        return res.status(200).json({message:"here is you student infor", result})
     })
 })
 
@@ -44,9 +50,12 @@ app.post('/poststudent', (req,res)=>{
     const sql =`INSERT INTO student(studentname, email, phonenumber, subjectID, classID) VALUES(?, ?, ?, ?, ?)`
     mysql.query(sql, [studentname, email, phonenumber, subjectID, classID], (error, result)=>{
         if(error){
-            console.log("not able to insert student", error.message)
+            return res.status(500).json({error:"not able to insert student in database", error})
         }
-        console.log("here is your result", result)
+        if(result.affectedRows==0){
+            return res.status(404).json({message:"not able insert uses"})
+         }
+        return res.status(200).json({message:"here is your result", result})
     })
 })
 app.put('/updatestudent', (req, res) => {
@@ -89,7 +98,7 @@ app.delete('/deletestudent', (req, res) => {
         }
         if(result.affectedRows == 0){
            return res.status(404).json({error: "no use deletd in rows"});
-        }
+        } 
         return res.status(200).json({message: "here is you user", result});
     })
     
